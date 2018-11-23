@@ -5,3 +5,7 @@ type UserGroup struct {
 	UserID  int
 	GroupID int
 }
+
+func (userGroup *UserGroup) IsValid() bool {
+	return !(userGroup.UserID == 0 || userGroup.GroupID == 0)
+}
