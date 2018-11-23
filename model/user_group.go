@@ -1,7 +1,7 @@
 package model
 
 type UserGroup struct {
-	ID      string
-	UserID  string
-	GroupID string
+	ID      int
+	UserID  int
+	GroupID int
 }

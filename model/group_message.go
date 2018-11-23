@@ -5,9 +5,9 @@ import (
 )
 
 type GroupMessage struct {
-	ID        string
-	UserID    string 
-	GroupID   string
+	ID        int
+	UserID    int 
+	GroupID   int
 	Message   string
 	MessageSentAt time.Time
 }

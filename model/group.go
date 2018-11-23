@@ -6,7 +6,7 @@ import (
 )
 
 type Group struct {
-	ID             string
+	ID             int
 	Name           string
 	LastActivityAt time.Time
 }
