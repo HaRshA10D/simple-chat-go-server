@@ -22,7 +22,7 @@ func TestUserIsValid(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		user    *User
+		user     *User
 		expected bool
 	}{
 		{"User name with only alphabates should be ture", user1, true},
