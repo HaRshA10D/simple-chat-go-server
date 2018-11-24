@@ -5,8 +5,8 @@ import (
 )
 
 type User struct {
-	ID int
-	Name string
+	ID    int `gorm:"primary_key;AUTO_INCREMENT"`
+	Name  string
 	Token string
 }
 
