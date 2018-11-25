@@ -3,25 +3,21 @@ package store
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
 )
 
 func TestCreateUser(t *testing.T) {
 
-	db, err := gorm.Open("postgres", "user=shailendra dbname=simplechat sslmode=disable")
-	if err != nil {
-		t.Error("Not able to connect with database")
-	}
+	store, err := NewSimpleChatStore("localhost", "5432", "simplechat", "shailendra", "")
 
-	store := &SQLSupplier{
-		simpleChatDatabase: db,
+	if err != nil {
+		t.Fatalf("not able to create store %s", err.Error())
 	}
 
 	user := model.User{}
 
-	store.simpleChatDatabase.CreateTable(&user)
+	store.DB().CreateTable(&user)
 
 	user1 := &model.User{
 		Name: "Harry",
@@ -30,17 +26,54 @@ func TestCreateUser(t *testing.T) {
 		Name: "Harry",
 	}
 
-	user1Token, user1Message := store.CreateUser(user1)
-	user2Token, user2Message := store.CreateUser(user2)
+	err1 := store.CreateUser(user1)
+	err2 := store.CreateUser(user2)
 
-	if user1Token == "" || user1Message != "login successful" {
+	if err1 != nil || user1.Token == "" {
 		t.Error("new user should be add succesfully in database")
 	}
 
-	if user2Token == "" || user2Message != "login successful" {
+	if err2 != nil || user2.Token == "" {
 		t.Error("existing user should not be add succesfully in database but should be login")
 	}
 
-	store.simpleChatDatabase.DropTable(&model.User{})
-	store.simpleChatDatabase.Close()
+	store.DB().DropTable(&model.User{})
+	store.DB().Close()
+}
+
+func TestFindUser(t *testing.T) {
+	store, err := NewSimpleChatStore("localhost", "5432", "simplechat", "shailendra", "")
+
+	if err != nil {
+		t.Fatalf("not able to create store %s", err.Error())
+	}
+
+	user := model.User{}
+
+	store.DB().CreateTable(&user)
+
+	token := "123456789"
+
+	_, findErr := store.FindUserByToken(token)
+
+	if findErr == nil {
+		t.Errorf("Should return error when token is not found")
+	}
+
+	user1 := &model.User{
+		Name: "Harry",
+	}
+
+	store.CreateUser(user1)
+
+	returnedUser, findErr := store.FindUserByToken(user1.Token)
+
+	if findErr != nil {
+		t.Errorf("should return user when we find user with valid token %s", findErr.Error())
+	}
+
+	if user1.ID != returnedUser.ID {
+		t.Error("Invalid user returned")
+	}
+
 }
