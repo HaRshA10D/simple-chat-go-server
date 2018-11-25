@@ -11,6 +11,7 @@ import (
 )
 
 type SimpleChatStore interface {
+	JoinGroup(user *model.User, group *model.Group) error
 	CreateUser(user *model.User) error
 	FindUserByToken(token string) (model.User, error)
 	CreateGroup(group model.Group) (model.Group, error)
@@ -19,6 +20,25 @@ type SimpleChatStore interface {
 
 type sqlSupplier struct {
 	db *gorm.DB
+}
+
+func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) error {
+	resultGroup := &model.Group{}
+	findGroup := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
+	if findGroup.RecordNotFound() {
+		return errors.New("Group requested to join doesn't exist")
+	}
+	insertUserGroup := &model.UserGroup{
+		UserID:  user.ID,
+		GroupID: resultGroup.ID,
+	}
+	findUserGroup := sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
+	if !findUserGroup.RecordNotFound() {
+		return errors.New("Already a member of the group requested")
+	}
+	sqlSupplier.DB().Create(insertUserGroup)
+	group.ID = insertUserGroup.GroupID
+	return nil
 }
 
 func (sqlSupplier *sqlSupplier) CreateGroup(group model.Group) (model.Group, error) {
@@ -75,8 +95,8 @@ func NewSimpleChatStore(dbHost, dbPort, dbName, dbUser, dbPass string) (SimpleCh
 		return nil, err
 	}
 
-	db.CreateTable(&model.User{})
-	db.CreateTable(&model.Group{})
+	// db.CreateTable(&model.User{})
+	// db.CreateTable(&model.Group{})
 	return &sqlSupplier{
 		db: db,
 	}, nil
