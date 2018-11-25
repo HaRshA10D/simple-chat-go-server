@@ -7,6 +7,11 @@ import (
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
 )
 
+func (api *API) InitRootRoutes() {
+	api.Router.UserRouter.Handle("/login", api.ChatHandler(loginUser)).Methods("POST")
+	api.Router.GroupRouter.Handle("/", api.AuthRequiredChatHandler(createGroup)).Methods("POST")
+}
+
 func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
 	statusCode := 200
 	user := model.User{}
@@ -27,9 +32,7 @@ func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
 
 func createGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 	statusCode := 200
-
 	group := model.Group{}
-
 	json.NewDecoder(r.Body).Decode(&group)
 	response := make(map[string]interface{})
 	returnedGroup, err := c.Store.CreateGroup(group)

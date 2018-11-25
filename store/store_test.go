@@ -115,7 +115,7 @@ func TestCreateGroup(t *testing.T) {
 	if createGroupError != nil {
 		t.Errorf("Create Group Should Create Group %s", createGroupError.Error())
 	}
-	if returnedGroup.Name != group1.Name || returnedGroup.ID == 0 {
+	if returnedGroup.Name != group1.Name && returnedGroup.ID == 0 {
 		t.Error("Create Group Should Create Group")
 	}
 	store.DB().DropTable(&model.User{})

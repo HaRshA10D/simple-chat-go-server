@@ -27,6 +27,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Auth-Token")
 		user, err := h.Store.FindUserByToken(token)
 		if err != nil {
+			w.Header().Set("Content-type", "application/json")
 			w.WriteHeader(401)
 			// TODO: convert to JSON
 			w.Write([]byte("Not authorised"))

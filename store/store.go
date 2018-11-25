@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	uuid "github.com/satori/go.uuid"
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
 )
@@ -74,6 +75,8 @@ func NewSimpleChatStore(dbHost, dbPort, dbName, dbUser, dbPass string) (SimpleCh
 		return nil, err
 	}
 
+	db.CreateTable(&model.User{})
+	db.CreateTable(&model.Group{})
 	return &sqlSupplier{
 		db: db,
 	}, nil

@@ -65,7 +65,7 @@ func TestCreateGroup(t *testing.T) {
 		Name: "group",
 	}
 
-	existinguser := model.User{
+	existingUser := model.User{
 		ID:    10,
 		Token: "12345",
 		Name:  "Harry",
@@ -73,15 +73,15 @@ func TestCreateGroup(t *testing.T) {
 
 	//FIXME: return token from create user along with error
 	simpleChatStore.On("CreateGroup", mock.Anything).Return(group, nil).Once()
-	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existinguser, nil).Once()
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, nil).Once()
 
 	groupName := []byte(`{"name":"group"}`)
 	url := "localhost:3000/groups"
 	rr := httptest.NewRecorder()
 
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(groupName))
-	req.Header.Add("Auth-Token", "token "+existinguser.Token)
-	handler := api.AuthRequiredChatHandler(createGroup)
+
+	handler := api.ChatHandler(createGroup)
 	handler.ServeHTTP(rr, req)
 	var returnResponse map[string]interface{}
 	json.Unmarshal(rr.Body.Bytes(), &returnResponse)
