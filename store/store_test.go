@@ -75,5 +75,50 @@ func TestFindUser(t *testing.T) {
 	if user1.ID != returnedUser.ID {
 		t.Error("Invalid user returned")
 	}
+	store.DB().DropTable(&model.User{})
+	store.DB().Close()
 
+}
+
+func TestCreateGroup(t *testing.T) {
+	store, err := NewSimpleChatStore("localhost", "5432", "simplechat", "shailendra", "")
+
+	if err != nil {
+		t.Fatalf("not able to create store %s", err.Error())
+	}
+
+	user := model.User{}
+
+	store.DB().CreateTable(&user)
+
+	token := "123456789"
+
+	_, findErr := store.FindUserByToken(token)
+
+	if findErr == nil {
+		t.Errorf("Should return error when token is not found")
+	}
+
+	user1 := &model.User{
+		Name: "Harry",
+	}
+
+	store.CreateUser(user1)
+
+	group := model.Group{}
+	store.DB().CreateTable(group)
+
+	group1 := model.Group{
+		Name: "GroupName",
+	}
+	returnedGroup, createGroupError := store.CreateGroup(group1)
+	if createGroupError != nil {
+		t.Errorf("Create Group Should Create Group %s", createGroupError.Error())
+	}
+	if returnedGroup.Name != group1.Name || returnedGroup.ID == 0 {
+		t.Error("Create Group Should Create Group")
+	}
+	store.DB().DropTable(&model.User{})
+	store.DB().DropTable(&model.Group{})
+	store.DB().Close()
 }
