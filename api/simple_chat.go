@@ -20,6 +20,29 @@ func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
 	response.Token = user.Token
 	message := make(map[string]interface{})
 	message["data"] = response
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(message)
+}
+
+func createGroup(c *Context, w http.ResponseWriter, r *http.Request) {
+	statusCode := 200
+
+	group := model.Group{}
+
+	json.NewDecoder(r.Body).Decode(&group)
+	response := make(map[string]interface{})
+	returnedGroup, err := c.Store.CreateGroup(group)
+	if err != nil {
+		response["message"] = "Not able to craete group"
+		statusCode = 400
+	}
+	response["group_id"] = returnedGroup.ID
+	response["group_name"] = returnedGroup.Name
+
+	message := make(map[string]interface{})
+	message["data"] = response
+	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(message)
 }
