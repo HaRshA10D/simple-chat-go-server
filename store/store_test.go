@@ -2,6 +2,7 @@ package store
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -149,6 +150,77 @@ func TestJoinGroup(t *testing.T) {
 	err2 := store.JoinGroup(testUser, testGroup)
 	assert.Error(t, err2, "Shouldn't allow a user to join group more than once")
 }
+
+func TestSendMessage(t *testing.T) {
+	groupSchema := &model.Group{}
+	userSchema := &model.User{}
+	groupMessageSchema := &model.GroupMessage{}
+
+	store, storeErr := setUp(userSchema, groupSchema, groupMessageSchema)
+	if storeErr != nil {
+		t.Fatalf("Not able to create store: %s", storeErr.Error())
+	}
+	defer tearDown(store.DB(), userSchema, groupSchema, groupMessageSchema)
+
+	user := &model.User{
+		ID:    5,
+		Name:  "Pinkman",
+		Token: "123456789",
+	}
+
+	group := &model.Group{
+		ID:             6,
+		Name:           "myGroupName",
+		LastActivityAt: time.Now(),
+	}
+
+	textMessage := "here i am"
+	sendMessageTime := int64(1543217006000)
+
+	err := store.SendMessage(user, group, textMessage, sendMessageTime)
+	if err == nil {
+		t.Error("User should exist to be able to send the message")
+	}
+
+	store.CreateUser(user)
+	err = store.SendMessage(user, group, textMessage, sendMessageTime)
+	if err == nil {
+		t.Error("Group should exist to be able to send the message")
+	}
+
+	store.CreateGroup(*group)
+	err = store.SendMessage(user, group, textMessage, sendMessageTime)
+	if err != nil {
+		t.Error("Send Message should send the message by a user and to a group")
+	}
+}
+
+func TestFindGroupById(t *testing.T) {
+	groupSchema := &model.Group{}
+	store, storeErr := setUp(groupSchema)
+	if storeErr != nil {
+		t.Fatalf("Not able to create store: %s", storeErr.Error())
+	}
+	defer tearDown(store.DB(), groupSchema)
+
+	_, err := store.FindGroupByID("1")
+	if err == nil {
+		t.Error("Group does not exist")
+	}
+	groupSchema.ID = 1
+	groupSchema.LastActivityAt = time.Now()
+	groupSchema.Name = "GroupName"
+	store.CreateGroup(*groupSchema)
+
+	group, err := store.FindGroupByID("1")
+	if err != nil {
+		t.Error("Existing group with id should be found")
+	}
+	if group.ID != groupSchema.ID {
+		t.Error("The ID of found group should be same as given ID")
+	}
+}
+
 
 func setUp(tables ...interface{}) (SimpleChatStore, error) {
 	config := model.NewConfig()

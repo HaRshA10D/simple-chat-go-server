@@ -15,11 +15,40 @@ type SimpleChatStore interface {
 	CreateUser(user *model.User) error
 	FindUserByToken(token string) (model.User, error)
 	CreateGroup(group model.Group) (model.Group, error)
+	FindGroupByID(ID string) (model.Group, error)
+	SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error
 	DB() *gorm.DB
 }
 
 type sqlSupplier struct {
 	db *gorm.DB
+}
+
+func (sqlSupplier *sqlSupplier) SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error {
+
+	returnUser := sqlSupplier.DB().First(&model.User{}, "name = ?", user.Name)
+
+	if err := returnUser.Error; err != nil {
+		return errors.New("User does not exist for send message")
+	}
+
+	returnGroup := sqlSupplier.DB().First(&model.Group{}, "ID = ?", group.ID)
+
+	if err := returnGroup.Error; err != nil {
+		return errors.New("Group does not exist for send message")
+	}
+
+	groupMessage := &model.GroupMessage{
+		UserID:        user.ID,
+		GroupID:       group.ID,
+		Message:       messageText,
+		MessageSentAt: sendMessageTime,
+	}
+	err := sqlSupplier.DB().Create(groupMessage).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) error {
@@ -63,6 +92,15 @@ func (sqlSupplier *sqlSupplier) FindUserByToken(token string) (model.User, error
 		return model.User{}, err
 	}
 	return user, nil
+}
+
+func (sqlSupplier *sqlSupplier) FindGroupByID(ID string) (model.Group, error) {
+	group := model.Group{}
+	result := sqlSupplier.DB().First(&group, "ID = ?", ID)
+	if err := result.Error; err != nil {
+		return model.Group{}, err
+	}
+	return group, nil
 }
 
 func (sqlSupplier *sqlSupplier) CreateUser(currentUser *model.User) error {

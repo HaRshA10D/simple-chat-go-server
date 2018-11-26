@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
@@ -22,15 +23,18 @@ type Handler struct {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := &Context{}
 	c.Store = h.Store
-
 	if h.AuthenticationRequired {
 		token := r.Header.Get("Auth-Token")
 		user, err := h.Store.FindUserByToken(token)
 		if err != nil {
 			w.Header().Set("Content-type", "application/json")
 			w.WriteHeader(401)
-			// TODO: convert to JSON
+			data := make(map[string]interface{})
+			message := make(map[string]interface{})
+			message["message"] = "Not Authorised"
+			data["data"] = message
 			w.Write([]byte("Not authorised"))
+			json.NewEncoder(w).Encode(data)
 			return
 		}
 		c.User = &user
