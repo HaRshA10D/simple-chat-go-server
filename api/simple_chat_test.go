@@ -266,3 +266,83 @@ func TestJoinGroup(t *testing.T) {
 
 	assert.Equal(t, http.StatusConflict, rr.Code, "Should not join a user in group user is already part of")
 }
+
+func TestGroupMessages(t *testing.T) {
+	simpleChatStore := &mocks.SimpleChatStore{}
+
+	api := &API{}
+	api.Store = simpleChatStore
+
+	group := model.Group{
+		ID:   10,
+		Name: "group",
+	}
+
+	storeGroupMessagesResponse := []model.GroupMessage{
+		model.GroupMessage{
+			Message:       "M1",
+			MessageSentAt: 123456789,
+			UserName:      "U1",
+			ID:            1,
+			UserID:        1,
+			GroupID:       1,
+		},
+		model.GroupMessage{
+			Message:       "M2",
+			MessageSentAt: 123456888,
+			UserName:      "U2",
+			ID:            2,
+			UserID:        2,
+			GroupID:       1,
+		},
+	}
+
+	existingUser := model.User{
+		ID:    10,
+		Token: "TOKENVALUE",
+		Name:  "Harry",
+	}
+
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, errors.New("No Auth")).Once()
+	url := "localhost:3000/groups/10/messages/"
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	handler := api.AuthRequiredChatHandler(groupMessages)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, 401, rr.Code, "Should get code 401 when user is not authorised")
+
+	simpleChatStore.On("FindGroupByID", mock.Anything).Return(group, errors.New("group does not exist")).Once()
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, nil).Once()
+	url = "localhost:3000/groups/1/messages"
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", url, nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
+	req.Header.Set("Auth-Token", "TOKENVALUE")
+	handler = api.AuthRequiredChatHandler(groupMessages)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, 404, rr.Code, "Should get code 404 when group is not present")
+
+	simpleChatStore.On("GroupMessages", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(storeGroupMessagesResponse, nil).Once()
+	simpleChatStore.On("FindGroupByID", mock.Anything).Return(group, nil).Once()
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, nil).Once()
+	url = "localhost:3000/groups/10/messages"
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", url, nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "10"})
+	req.Header.Set("Auth-Token", "TOKENVALUE")
+	handler = api.AuthRequiredChatHandler(groupMessages)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code, "Should get code 200 when message is sent")
+
+	simpleChatStore.On("GroupMessages", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("Internal Database Error")).Once()
+	simpleChatStore.On("FindGroupByID", mock.Anything).Return(group, nil).Once()
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, nil).Once()
+	url = "localhost:3000/groups/10/messages"
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", url, nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "10"})
+	req.Header.Set("Auth-Token", "TOKENVALUE")
+	handler = api.AuthRequiredChatHandler(groupMessages)
+	handler.ServeHTTP(rr, req)
+	assert.Equal(t, 500, rr.Code, "Should get code 500 when internal db error occurs")
+}
