@@ -151,6 +151,60 @@ func TestJoinGroup(t *testing.T) {
 	assert.Error(t, err2, "Shouldn't allow a user to join group more than once")
 }
 
+func TestGetUserGroups(t *testing.T) {
+
+	group := &model.Group{}
+	user := &model.User{}
+	userGroup := &model.UserGroup{}
+
+	store, storeErr := setUp(user, group, userGroup)
+	if storeErr != nil {
+		t.Fatalf("Not able to create store: %s", storeErr.Error())
+	}
+	defer tearDown(store.DB(), user, group, userGroup)
+
+	testUser := &model.User{
+		ID:   5,
+		Name: "Pinkman",
+	}
+
+	group1 := model.Group{
+		Name: "g1",
+	}
+	group2 := model.Group{
+		Name: "g2",
+	}
+	group3 := model.Group{
+		Name: "g3",
+	}
+	group4 := model.Group{
+		Name: "g4",
+	}
+	group5 := model.Group{
+		Name: "g5",
+	}
+
+	store.CreateUser(testUser)
+
+	group1, _ = store.CreateGroup(group1)
+	group2, _ = store.CreateGroup(group2)
+	group3, _ = store.CreateGroup(group3)
+	group4, _ = store.CreateGroup(group4)
+	group5, _ = store.CreateGroup(group5)
+
+	store.JoinGroup(testUser, &group1)
+	store.JoinGroup(testUser, &group2)
+	store.JoinGroup(testUser, &group3)
+	store.JoinGroup(testUser, &group4)
+	store.JoinGroup(testUser, &group5)
+
+	userGroups, error := store.UserGroups(testUser)
+	if error != nil {
+		t.Error(error.Error())
+	}
+	assert.Equal(t, 5, len(userGroups), "Should return 5 groups")
+}
+
 func setUp(tables ...interface{}) (SimpleChatStore, error) {
 	config := model.NewConfig()
 
