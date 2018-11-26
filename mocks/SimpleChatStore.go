@@ -83,6 +83,20 @@ func (_m *SimpleChatStore) FindUserByToken(token string) (model.User, error) {
 	return r0, r1
 }
 
+// InitDatabase provides a mock function with given fields:
+func (_m *SimpleChatStore) InitDatabase() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // JoinGroup provides a mock function with given fields: user, group
 func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error {
 	ret := _m.Called(user, group)

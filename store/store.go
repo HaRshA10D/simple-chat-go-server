@@ -15,6 +15,7 @@ type SimpleChatStore interface {
 	CreateUser(user *model.User) error
 	FindUserByToken(token string) (model.User, error)
 	CreateGroup(group model.Group) (model.Group, error)
+	InitDatabase() error
 	DB() *gorm.DB
 }
 
@@ -97,4 +98,28 @@ func NewSimpleChatStore(config *model.Config) (SimpleChatStore, error) {
 	return &sqlSupplier{
 		db: db,
 	}, nil
+}
+
+func (sqlSupplier *sqlSupplier) InitDatabase() error {
+	user := &model.User{}
+	group := &model.Group{}
+	userGroup := &model.UserGroup{}
+	groupMessage := &model.GroupMessage{}
+	err := sqlSupplier.DB().CreateTable(user).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(group).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(userGroup).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(groupMessage).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

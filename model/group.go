@@ -6,7 +6,7 @@ import (
 )
 
 type Group struct {
-	ID             int
+	ID             int `gorm:"primary_key;SERIAL"`
 	Name           string
 	LastActivityAt time.Time
 }
