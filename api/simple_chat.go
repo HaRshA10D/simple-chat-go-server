@@ -20,6 +20,7 @@ func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 	json.NewDecoder(r.Body).Decode(&user)
 	response := model.UserResponse{}
+	response.Message = "Login Successful"
 	err := c.Store.CreateUser(&user)
 	if err != nil {
 		response.Message = "Not able to login"
