@@ -88,15 +88,12 @@ func (sqlSupplier *sqlSupplier) DB() *gorm.DB {
 	return sqlSupplier.db
 }
 
-func NewSimpleChatStore(dbHost, dbPort, dbName, dbUser, dbPass string) (SimpleChatStore, error) {
-	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&timezone=UTC", dbUser, dbPass, dbHost, dbPort, dbName)
+func NewSimpleChatStore(config *model.Config) (SimpleChatStore, error) {
+	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&timezone=UTC", config.UserName, config.Password, config.DatabaseHost, config.DatabasePort, config.DBName)
 	db, err := gorm.Open("postgres", url)
 	if err != nil {
 		return nil, err
 	}
-
-	// db.CreateTable(&model.User{})
-	// db.CreateTable(&model.Group{})
 	return &sqlSupplier{
 		db: db,
 	}, nil

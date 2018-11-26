@@ -82,3 +82,17 @@ func (_m *SimpleChatStore) FindUserByToken(token string) (model.User, error) {
 
 	return r0, r1
 }
+
+// JoinGroup provides a mock function with given fields: user, group
+func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error {
+	ret := _m.Called(user, group)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.User, *model.Group) error); ok {
+		r0 = rf(user, group)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

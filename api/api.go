@@ -38,13 +38,13 @@ func Init(store store.SimpleChatStore) *API {
 	return api
 }
 
-func (api *API) StartServer(port, WriteTimeout, ReadTimeout, IdleTimeout int) {
+func (api *API) StartServer(port, writeTimeout, readTimeout, idleTimeout int) {
 	var handler http.Handler = api.Router.RootRouter
 	api.Server = &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", port),
-		WriteTimeout: time.Duration(WriteTimeout) * time.Second,
-		ReadTimeout:  time.Duration(ReadTimeout) * time.Second,
-		IdleTimeout:  time.Duration(IdleTimeout) * time.Second,
+		WriteTimeout: time.Duration(writeTimeout) * time.Second,
+		ReadTimeout:  time.Duration(readTimeout) * time.Second,
+		IdleTimeout:  time.Duration(idleTimeout) * time.Second,
 		Handler:      handlers.RecoveryHandler(handlers.PrintRecoveryStack(true))(handler),
 	}
 	log.Printf("Listening to port : %d \n", port)
