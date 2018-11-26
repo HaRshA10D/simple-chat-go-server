@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
 )
 
 func (api *API) InitRootRoutes() {
 	api.Router.UserRouter.Handle("/login", api.ChatHandler(loginUser)).Methods("POST")
 	api.Router.GroupRouter.Handle("/", api.AuthRequiredChatHandler(createGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("/{name}/join", api.AuthRequiredChatHandler(joinGroup)).Methods("POST")
 }
 
 func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -42,6 +45,34 @@ func createGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 	response["group_id"] = returnedGroup.ID
 	response["group_name"] = returnedGroup.Name
+
+	message := make(map[string]interface{})
+	message["data"] = response
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(message)
+}
+
+func joinGroup(c *Context, w http.ResponseWriter, r *http.Request) {
+	statusCode := 200
+	vars := mux.Vars(r)
+	group := &model.Group{
+		Name: vars["name"],
+	}
+
+	response := make(map[string]interface{})
+	err := c.Store.JoinGroup(c.User, group)
+	if err != nil {
+		if err.Error() == "Group does not exist" {
+			statusCode = 404
+		} else {
+			statusCode = 409
+		}
+		response["message"] = err.Error()
+	}
+
+	response["group_id"] = group.ID
+	response["group_name"] = group.Name
 
 	message := make(map[string]interface{})
 	message["data"] = response

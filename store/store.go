@@ -27,7 +27,7 @@ func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) 
 	resultGroup := &model.Group{}
 	result := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
 	if result.RecordNotFound() {
-		return errors.New("Group requested to join doesn't exist")
+		return errors.New("Group does not exist")
 	}
 	insertUserGroup := &model.UserGroup{
 		UserID:  user.ID,
@@ -35,7 +35,7 @@ func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) 
 	}
 	result = sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
 	if !result.RecordNotFound() {
-		return errors.New("Already a member of the group requested")
+		return errors.New("You have already joined this group")
 	}
 	sqlSupplier.DB().Create(insertUserGroup)
 	group.ID = insertUserGroup.GroupID
