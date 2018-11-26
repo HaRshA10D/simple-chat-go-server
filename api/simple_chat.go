@@ -43,6 +43,11 @@ func createGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 		response["message"] = "Not able to craete group"
 		statusCode = 400
 	}
+
+	if statusCode == 200 {
+		c.Store.JoinGroup(c.User, &returnedGroup)
+	}
+
 	response["group_id"] = returnedGroup.ID
 	response["group_name"] = returnedGroup.Name
 
