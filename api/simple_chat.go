@@ -11,8 +11,9 @@ import (
 
 func (api *API) InitRootRoutes() {
 	api.Router.UserRouter.Handle("/login", api.ChatHandler(loginUser)).Methods("POST")
-	api.Router.GroupRouter.Handle("/", api.AuthRequiredChatHandler(createGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("", api.AuthRequiredChatHandler(createGroup)).Methods("POST")
 	api.Router.GroupRouter.Handle("/{name}/join", api.AuthRequiredChatHandler(joinGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("", api.AuthRequiredChatHandler(fetchUserGroups)).Methods("GET")
 }
 
 func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -82,6 +83,24 @@ func joinGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	message := make(map[string]interface{})
 	message["data"] = response
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(message)
+}
+
+func fetchUserGroups(c *Context, w http.ResponseWriter, r *http.Request) {
+	statusCode := 200
+	response := make(map[string]interface{})
+
+	userGroups, err := c.Store.UserGroups(c.User)
+	if err != nil {
+		statusCode = 500
+	}
+
+	response["groups"] = userGroups
+	message := make(map[string]interface{})
+	message["data"] = response
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(message)
