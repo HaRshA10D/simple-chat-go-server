@@ -17,6 +17,7 @@ type SimpleChatStore interface {
 	CreateGroup(group model.Group) (model.Group, error)
 	FindGroupByID(ID string) (model.Group, error)
 	SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error
+	UserGroups(user *model.User) ([]model.Group, error)
 	InitDatabase() error
 	DB() *gorm.DB
 }
@@ -50,6 +51,16 @@ func (sqlSupplier *sqlSupplier) SendMessage(user *model.User, group *model.Group
 		return err
 	}
 	return nil
+}
+
+func (sqlSupplier *sqlSupplier) UserGroups(user *model.User) ([]model.Group, error) {
+	resultGroups := []model.Group{}
+	query := "SELECT groups.id, groups.name, groups.last_activity_at FROM user_groups INNER JOIN groups ON user_groups.group_id = groups.id  AND user_groups.user_id = ? ORDER BY groups.last_activity_at DESC"
+	result := sqlSupplier.DB().Raw(query, user.ID).Scan(&resultGroups)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return resultGroups, nil
 }
 
 func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) error {
