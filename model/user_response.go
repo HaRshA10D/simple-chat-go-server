@@ -1,6 +1,6 @@
 package model
 
 type UserResponse struct {
-	Token   string
-	Message string
+	Token   string `json:"token"`
+	Message string `json:"message"`
 }
