@@ -141,6 +141,7 @@ func TestJoinGroup(t *testing.T) {
 	store.DB().Create(insertGroup)
 
 	_ = store.JoinGroup(testUser, testGroup)
+
 	findUserGroup := store.DB().Where("user_id = ? AND group_id = ?", testUser.ID, insertGroup.ID).First(&model.UserGroup{})
 	assert.False(t, findUserGroup.RecordNotFound(), "Should join a user in to given group")
 

@@ -25,16 +25,16 @@ type sqlSupplier struct {
 
 func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) error {
 	resultGroup := &model.Group{}
-	findGroup := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
-	if findGroup.RecordNotFound() {
+	result := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
+	if result.RecordNotFound() {
 		return errors.New("Group requested to join doesn't exist")
 	}
 	insertUserGroup := &model.UserGroup{
 		UserID:  user.ID,
 		GroupID: resultGroup.ID,
 	}
-	findUserGroup := sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
-	if !findUserGroup.RecordNotFound() {
+	result = sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
+	if !result.RecordNotFound() {
 		return errors.New("Already a member of the group requested")
 	}
 	sqlSupplier.DB().Create(insertUserGroup)
