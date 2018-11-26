@@ -104,13 +104,13 @@ func (_m *SimpleChatStore) FindUserByToken(token string) (model.User, error) {
 	return r0, r1
 }
 
-// JoinGroup provides a mock function with given fields: user, group
-func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error {
-	ret := _m.Called(user, group)
+// InitDatabase provides a mock function with given fields:
+func (_m *SimpleChatStore) InitDatabase() error {
+	ret := _m.Called()
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.User, *model.Group) error); ok {
-		r0 = rf(user, group)
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -118,8 +118,8 @@ func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error
 	return r0
 }
 
-// Messages provides a mock function with given fields: user, group
-func (_m *SimpleChatStore) Messages(user *model.User, group *model.Group) error {
+// JoinGroup provides a mock function with given fields: user, group
+func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error {
 	ret := _m.Called(user, group)
 
 	var r0 error

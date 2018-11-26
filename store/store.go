@@ -17,6 +17,7 @@ type SimpleChatStore interface {
 	CreateGroup(group model.Group) (model.Group, error)
 	FindGroupByID(ID string) (model.Group, error)
 	SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error
+	InitDatabase() error
 	DB() *gorm.DB
 }
 
@@ -53,17 +54,17 @@ func (sqlSupplier *sqlSupplier) SendMessage(user *model.User, group *model.Group
 
 func (sqlSupplier *sqlSupplier) JoinGroup(user *model.User, group *model.Group) error {
 	resultGroup := &model.Group{}
-	findGroup := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
-	if findGroup.RecordNotFound() {
-		return errors.New("Group requested to join doesn't exist")
+	result := sqlSupplier.DB().Where("name = ?", group.Name).First(resultGroup)
+	if result.RecordNotFound() {
+		return errors.New("Group does not exist")
 	}
 	insertUserGroup := &model.UserGroup{
 		UserID:  user.ID,
 		GroupID: resultGroup.ID,
 	}
-	findUserGroup := sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
-	if !findUserGroup.RecordNotFound() {
-		return errors.New("Already a member of the group requested")
+	result = sqlSupplier.DB().Where("user_id = ? AND group_id = ?", insertUserGroup.UserID, insertUserGroup.GroupID).First(&model.UserGroup{})
+	if !result.RecordNotFound() {
+		return errors.New("You have already joined this group")
 	}
 	sqlSupplier.DB().Create(insertUserGroup)
 	group.ID = insertUserGroup.GroupID
@@ -135,4 +136,28 @@ func NewSimpleChatStore(config *model.Config) (SimpleChatStore, error) {
 	return &sqlSupplier{
 		db: db,
 	}, nil
+}
+
+func (sqlSupplier *sqlSupplier) InitDatabase() error {
+	user := &model.User{}
+	group := &model.Group{}
+	userGroup := &model.UserGroup{}
+	groupMessage := &model.GroupMessage{}
+	err := sqlSupplier.DB().CreateTable(user).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(group).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(userGroup).Error
+	if err != nil {
+		return err
+	}
+	err = sqlSupplier.DB().CreateTable(groupMessage).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

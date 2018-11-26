@@ -1,7 +1,7 @@
 package model
 
 type UserGroup struct {
-	ID      int `gorm:"primary_key;AUTO_INCREMENT"`
+	ID      int `gorm:"primary_key;SERIAL"`
 	UserID  int
 	GroupID int
 }

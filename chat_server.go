@@ -15,7 +15,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't connect to store : \n%s", err.Error())
 	}
-
+	err = store.InitDatabase()
+	if err != nil {
+		log.Fatalf("Can't connect to store : \n%s", err.Error())
+	}
 	api := api.Init(store)
 	api.StartServer(config.ServerPort, config.WriteTimeout, config.ReadTimeout, config.IdleTimeout)
 	api.QuitSignalHandler(15)

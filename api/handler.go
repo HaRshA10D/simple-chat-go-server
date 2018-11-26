@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
-
 	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/store"
 )
 
@@ -35,6 +34,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			data["data"] = message
 			w.Write([]byte("Not authorised"))
 			json.NewEncoder(w).Encode(data)
+
 			return
 		}
 		c.User = &user

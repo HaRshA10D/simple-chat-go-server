@@ -1,7 +1,7 @@
 package model
 
 type GroupMessage struct {
-	ID            int
+	ID            int `gorm:"primary_key;SERIAL"`
 	UserID        int
 	GroupID       int
 	Message       string
