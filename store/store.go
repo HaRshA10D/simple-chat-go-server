@@ -12,12 +12,13 @@ import (
 
 type SimpleChatStore interface {
 	JoinGroup(user *model.User, group *model.Group) error
+	CreateGroup(group model.Group) (model.Group, error)
 	CreateUser(user *model.User) error
 	FindUserByToken(token string) (model.User, error)
-	CreateGroup(group model.Group) (model.Group, error)
 	FindGroupByID(ID string) (model.Group, error)
 	SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error
 	UserGroups(user *model.User) ([]model.Group, error)
+	GroupMessages(user *model.User, groupID int) ([]model.GroupMessage, error)
 	InitDatabase() error
 	DB() *gorm.DB
 }
@@ -45,7 +46,9 @@ func (sqlSupplier *sqlSupplier) SendMessage(user *model.User, group *model.Group
 		GroupID:       group.ID,
 		Message:       messageText,
 		MessageSentAt: sendMessageTime,
+		UserName:      user.Name,
 	}
+
 	err := sqlSupplier.DB().Create(groupMessage).Error
 	if err != nil {
 		return err
@@ -132,6 +135,30 @@ func (sqlSupplier *sqlSupplier) CreateUser(currentUser *model.User) error {
 	currentUser.Token = user.Token
 	currentUser.ID = user.ID
 	return nil
+}
+
+func (sqlSupplier *sqlSupplier) GroupMessages(user *model.User, groupID int) ([]model.GroupMessage, error) {
+	returnUser := sqlSupplier.DB().First(&model.User{}, "name = ?", user.Name)
+	if err := returnUser.Error; err != nil {
+		return nil, errors.New("User does not exist for requested group messages")
+	}
+
+	returnGroup := sqlSupplier.DB().First(&model.Group{}, "ID = ?", groupID)
+	if err := returnGroup.Error; err != nil {
+		return nil, errors.New("Group does not exist for requested group messages")
+	}
+
+	returnUserGroup := sqlSupplier.DB().Where(&model.UserGroup{}, "UserID = ? AND GroupID = ?", user.ID, groupID).First(&model.UserGroup{})
+	if err := returnUserGroup.Error; err != nil {
+		return nil, errors.New("UserGroup does not exist for requested group messages")
+	}
+
+	userMessages := []model.GroupMessage{}
+	userMessagesFromDb := sqlSupplier.DB().Raw("SELECT user_name, message, message_sent_at FROM group_messages WHERE user_id = ? AND group_id = ? order by message_sent_at DESC limit 10", user.ID, groupID).Scan(&userMessages)
+	if err := userMessagesFromDb.Error; err != nil {
+		return nil, errors.New("Internal DB Error")
+	}
+	return userMessages, nil
 }
 
 func (sqlSupplier *sqlSupplier) DB() *gorm.DB {

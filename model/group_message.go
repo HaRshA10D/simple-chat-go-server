@@ -6,6 +6,7 @@ type GroupMessage struct {
 	GroupID       int
 	Message       string
 	MessageSentAt int64
+	UserName      string
 }
 
 func (groupMessage *GroupMessage) IsValid() bool {

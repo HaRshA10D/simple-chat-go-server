@@ -104,6 +104,29 @@ func (_m *SimpleChatStore) FindUserByToken(token string) (model.User, error) {
 	return r0, r1
 }
 
+// GroupMessages provides a mock function with given fields: user, groupID
+func (_m *SimpleChatStore) GroupMessages(user *model.User, groupID int) ([]model.GroupMessage, error) {
+	ret := _m.Called(user, groupID)
+
+	var r0 []model.GroupMessage
+	if rf, ok := ret.Get(0).(func(*model.User, int) []model.GroupMessage); ok {
+		r0 = rf(user, groupID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.GroupMessage)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.User, int) error); ok {
+		r1 = rf(user, groupID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // InitDatabase provides a mock function with given fields:
 func (_m *SimpleChatStore) InitDatabase() error {
 	ret := _m.Called()
