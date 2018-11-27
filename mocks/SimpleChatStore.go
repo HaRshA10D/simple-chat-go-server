@@ -62,6 +62,27 @@ func (_m *SimpleChatStore) DB() *gorm.DB {
 	return r0
 }
 
+// FindGroupByID provides a mock function with given fields: ID
+func (_m *SimpleChatStore) FindGroupByID(ID string) (model.Group, error) {
+	ret := _m.Called(ID)
+
+	var r0 model.Group
+	if rf, ok := ret.Get(0).(func(string) model.Group); ok {
+		r0 = rf(ID)
+	} else {
+		r0 = ret.Get(0).(model.Group)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindUserByToken provides a mock function with given fields: token
 func (_m *SimpleChatStore) FindUserByToken(token string) (model.User, error) {
 	ret := _m.Called(token)
@@ -104,6 +125,20 @@ func (_m *SimpleChatStore) JoinGroup(user *model.User, group *model.Group) error
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*model.User, *model.Group) error); ok {
 		r0 = rf(user, group)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SendMessage provides a mock function with given fields: user, group, messageText, sendMessageTime
+func (_m *SimpleChatStore) SendMessage(user *model.User, group *model.Group, messageText string, sendMessageTime int64) error {
+	ret := _m.Called(user, group, messageText, sendMessageTime)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.User, *model.Group, string, int64) error); ok {
+		r0 = rf(user, group, messageText, sendMessageTime)
 	} else {
 		r0 = ret.Error(0)
 	}

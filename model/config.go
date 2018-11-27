@@ -22,8 +22,8 @@ func NewConfig() *Config {
 		WriteTimeout:      300,
 		ReadTimeout:       300,
 		IdleTimeout:       300,
-		DBName:            "simplechat",
-		UserName:          "shailendra",
+		DBName:            "",
+		UserName:          "",
 		Password:          "",
 	}
 }

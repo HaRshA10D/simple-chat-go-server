@@ -1,15 +1,11 @@
 package model
 
-import (
-	"time"
-)
-
 type GroupMessage struct {
 	ID            int `gorm:"primary_key;SERIAL"`
 	UserID        int
 	GroupID       int
 	Message       string
-	MessageSentAt time.Time
+	MessageSentAt int64
 }
 
 func (groupMessage *GroupMessage) IsValid() bool {
