@@ -1,29 +1,23 @@
 package model
 
 type Config struct {
-	ServerPort        int
-	DatabaseHost      string
-	DatabasePort      string
-	ServerReadTimeout int
-	WriteTimeout      int
-	ReadTimeout       int
-	IdleTimeout       int
-	DBName            string
-	UserName          string
-	Password          string
+	ServerSettings   ServerSettings
+	DatabaseSettings DatabaseSettings
 }
 
-func NewConfig() *Config {
-	return &Config{
-		ServerPort:        9090,
-		DatabaseHost:      "localhost",
-		DatabasePort:      "5432",
-		ServerReadTimeout: 300,
-		WriteTimeout:      300,
-		ReadTimeout:       300,
-		IdleTimeout:       300,
-		DBName:            "simplechat",
-		UserName:          "simplechat_user",
-		Password:          "simplechat_pass",
-	}
+type ServerSettings struct {
+	ServerPort        *int
+	ServerReadTimeout *int
+	WriteTimeout      *int
+	ReadTimeout       *int
+	IdleTimeout       *int
+}
+
+type DatabaseSettings struct {
+	DriverName   *string
+	DatabaseHost *string
+	DatabasePort *string
+	DBName       *string
+	Password     *string
+	UserName     *string
 }

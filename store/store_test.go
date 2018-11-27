@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/utils"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/stretchr/testify/assert"
@@ -320,8 +322,7 @@ func TestGetUserGroups(t *testing.T) {
 }
 
 func setUp(tables ...interface{}) (SimpleChatStore, error) {
-	config := model.NewConfig()
-
+	config, _ := utils.LoadConfig(".env_test", "../")
 	store, storeErr := NewSimpleChatStore(config)
 
 	if storeErr != nil {

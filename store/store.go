@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	uuid "github.com/satori/go.uuid"
-	"source.golabs.io/ops-tech-peeps/simple-chat-go-server/model"
 )
 
 type SimpleChatStore interface {
@@ -166,7 +167,7 @@ func (sqlSupplier *sqlSupplier) DB() *gorm.DB {
 }
 
 func NewSimpleChatStore(config *model.Config) (SimpleChatStore, error) {
-	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&timezone=UTC", config.UserName, config.Password, config.DatabaseHost, config.DatabasePort, config.DBName)
+	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&timezone=UTC", *config.DatabaseSettings.UserName, *config.DatabaseSettings.Password, *config.DatabaseSettings.DatabaseHost, *config.DatabaseSettings.DatabasePort, *config.DatabaseSettings.DBName)
 	db, err := gorm.Open("postgres", url)
 	if err != nil {
 		return nil, err
