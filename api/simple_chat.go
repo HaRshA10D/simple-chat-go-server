@@ -15,6 +15,7 @@ func (api *API) InitRootRoutes() {
 	api.Router.GroupRouter.Handle("/{name}/join", api.AuthRequiredChatHandler(joinGroup)).Methods("POST")
 	api.Router.GroupRouter.Handle("", api.AuthRequiredChatHandler(fetchUserGroups)).Methods("GET")
 	api.Router.GroupRouter.Handle("/{id}/messages", api.AuthRequiredChatHandler(sendMessageToGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("/{id}/messages", api.AuthRequiredChatHandler(groupMessages)).Methods("GET")
 }
 
 type MessageRequest struct {
@@ -156,6 +157,46 @@ func fetchUserGroups(c *Context, w http.ResponseWriter, r *http.Request) {
 	message["data"] = response
 
 	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(message)
+}
+
+func groupMessages(c *Context, w http.ResponseWriter, r *http.Request) {
+	statusCode := 200
+	id := mux.Vars(r)["id"]
+	w.Header().Set("Content-type", "application/json")
+	message := make(map[string]interface{})
+	response := make(map[string]interface{})
+	group, err := c.Store.FindGroupByID(id)
+	if err != nil {
+		response["message"] = "Group does not exist"
+		message["data"] = response
+		statusCode = 404
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	groups, err := c.Store.GroupMessages(c.User, group.ID)
+	if err != nil {
+		response["message"] = "Internal Server Error"
+		message["data"] = response
+		statusCode = 500
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(message)
+		return
+	}
+
+	responseGroupMessages := []model.GroupMessageResponse{}
+	for i := 0; i < len(groups); i++ {
+		resMessage := model.GroupMessageResponse{}
+		resMessage.UserName = groups[i].UserName
+		resMessage.Message = groups[i].Message
+		resMessage.MessageSentAt = groups[i].MessageSentAt
+		responseGroupMessages = append(responseGroupMessages, resMessage)
+	}
+	response["messages"] = responseGroupMessages // list of messages - see how to send so that it follows contracts!
+	message["data"] = response
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(message)
 }

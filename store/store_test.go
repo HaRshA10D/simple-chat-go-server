@@ -179,21 +179,64 @@ func TestSendMessage(t *testing.T) {
 	sendMessageTime := int64(1543217006000)
 
 	err := store.SendMessage(user, group, textMessage, sendMessageTime)
-	if err == nil {
-		t.Error("User should exist to be able to send the message")
-	}
+	assert.Error(t, err, "User should exist to send message")
 
 	store.CreateUser(user)
 	err = store.SendMessage(user, group, textMessage, sendMessageTime)
-	if err == nil {
-		t.Error("Group should exist to be able to send the message")
-	}
+	assert.Error(t, err, "Group should exist to send the message to")
 
 	store.CreateGroup(*group)
 	err = store.SendMessage(user, group, textMessage, sendMessageTime)
 	if err != nil {
 		t.Error("Send Message should send the message by a user and to a group")
 	}
+}
+
+func TestGroupMessages(t *testing.T) {
+	groupSchema := &model.Group{}
+	userSchema := &model.User{}
+	groupMessageSchema := &model.GroupMessage{}
+	userGroupSchema := &model.UserGroup{}
+
+	store, storeErr := setUp(userSchema, groupSchema, groupMessageSchema, userGroupSchema)
+	if storeErr != nil {
+		t.Fatalf("Not able to create store: %s", storeErr.Error())
+	}
+	defer tearDown(store.DB(), userSchema, groupSchema, groupMessageSchema, userGroupSchema)
+
+	user := &model.User{
+		ID:    5,
+		Name:  "Pinkman",
+		Token: "123456789",
+	}
+
+	group := &model.Group{
+		ID:             6,
+		Name:           "myGroupName",
+		LastActivityAt: time.Now(),
+	}
+
+	_, err := store.GroupMessages(user, group.ID)
+	assert.Error(t, err, "User should exist to be able to get list of group messages")
+
+	store.CreateUser(user)
+
+	_, err1 := store.GroupMessages(user, group.ID)
+	assert.Error(t, err1, "User should exist to be able to get list of group messages")
+
+	store.CreateGroup(*group)
+
+	_, err2 := store.GroupMessages(user, group.ID)
+	assert.Error(t, err2, "User should be member of the group to get list of group messages")
+
+	store.JoinGroup(user, group)
+	store.SendMessage(user, group, "MessageText", 123456789)
+
+	groupMessages, err3 := store.GroupMessages(user, group.ID)
+	if err3 != nil {
+		t.Error("Group Messages should get the messages for the user of a group")
+	}
+	assert.Equal(t, "MessageText", groupMessages[0].Message, "Should get the expected messages")
 }
 
 func TestFindGroupById(t *testing.T) {
