@@ -209,7 +209,13 @@ func TestGroupMessages(t *testing.T) {
 	user := &model.User{
 		ID:    5,
 		Name:  "Pinkman",
-		Token: "123456789",
+		Token: "TOKEN",
+	}
+
+	user1 := &model.User{
+		ID:    1,
+		Name:  "Pinkman1",
+		Token: "TOKEN1",
 	}
 
 	group := &model.Group{
@@ -222,6 +228,7 @@ func TestGroupMessages(t *testing.T) {
 	assert.Error(t, err, "User should exist to be able to get list of group messages")
 
 	store.CreateUser(user)
+	store.CreateUser(user1)
 
 	_, err1 := store.GroupMessages(user, group.ID)
 	assert.Error(t, err1, "User should exist to be able to get list of group messages")
@@ -232,13 +239,15 @@ func TestGroupMessages(t *testing.T) {
 	assert.Error(t, err2, "User should be member of the group to get list of group messages")
 
 	store.JoinGroup(user, group)
-	store.SendMessage(user, group, "MessageText", 123456789)
+	store.JoinGroup(user1, group)
+	store.SendMessage(user, group, "MessageLate", 10000000001)
+	store.SendMessage(user1, group, "MessageEarly", 10000000000)
 
 	groupMessages, err3 := store.GroupMessages(user, group.ID)
 	if err3 != nil {
 		t.Error("Group Messages should get the messages for the user of a group")
 	}
-	assert.Equal(t, "MessageText", groupMessages[0].Message, "Should get the expected messages")
+	assert.Equal(t, "MessageEarly", groupMessages[1].Message, "Should get the expected messages")
 }
 
 func TestFindGroupById(t *testing.T) {

@@ -155,7 +155,7 @@ func (sqlSupplier *sqlSupplier) GroupMessages(user *model.User, groupID int) ([]
 	}
 
 	userMessages := []model.GroupMessage{}
-	userMessagesFromDb := sqlSupplier.DB().Raw("SELECT user_name, message, message_sent_at FROM group_messages WHERE user_id = ? AND group_id = ? order by message_sent_at DESC limit 10", user.ID, groupID).Scan(&userMessages)
+	userMessagesFromDb := sqlSupplier.DB().Raw("SELECT user_name, message, message_sent_at FROM group_messages WHERE group_id = ? order by message_sent_at DESC limit 10", groupID).Scan(&userMessages)
 	if err := userMessagesFromDb.Error; err != nil {
 		return nil, errors.New("Internal DB Error")
 	}
