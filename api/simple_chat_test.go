@@ -267,6 +267,69 @@ func TestJoinGroup(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, rr.Code, "Should not join a user in group user is already part of")
 }
 
+func TestFetchUserGroups(t *testing.T) {
+
+	simpleChatStore := &mocks.SimpleChatStore{}
+	api := &API{}
+	api.Store = simpleChatStore
+
+	existingUser := model.User{
+		ID:   10,
+		Name: "Harry",
+	}
+	group1 := model.Group{
+		ID:   1,
+		Name: "group1",
+	}
+	group2 := model.Group{
+		ID:   2,
+		Name: "group2",
+	}
+	group3 := model.Group{
+		ID:   3,
+		Name: "group3",
+	}
+	group4 := model.Group{
+		ID:   4,
+		Name: "group4",
+	}
+
+	userGroups := []model.Group{group1, group2, group3, group4}
+
+	simpleChatStore.On("FindUserByToken", mock.Anything).Return(existingUser, nil).Twice()
+	simpleChatStore.On("UserGroups", mock.Anything).Return(userGroups, nil).Once()
+
+	url := "localhoset:9090/groups"
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Auth-Token", "12345")
+	handler := api.AuthRequiredChatHandler(fetchUserGroups)
+	handler.ServeHTTP(rr, req)
+
+	var returnResponse map[string]interface{}
+	json.Unmarshal(rr.Body.Bytes(), &returnResponse)
+	dataByte, _ := json.Marshal(returnResponse["data"])
+	var parsedReturnResponse map[string]interface{}
+	json.Unmarshal(dataByte, &parsedReturnResponse)
+
+	responseGroupByte, _ := json.Marshal(parsedReturnResponse["groups"])
+	responseGroup := []model.Group{}
+	json.Unmarshal(responseGroupByte, &responseGroup)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "Status code should be 200")
+	assert.Equal(t, len(userGroups), len(responseGroup), "Should return 5 group details")
+
+	simpleChatStore.On("UserGroups", mock.Anything).Return([]model.Group{}, errors.New("Internal error")).Once()
+
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Set("Auth-Token", "12345")
+	handler = api.AuthRequiredChatHandler(fetchUserGroups)
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code, "Should throw internal error")
+}
+
 func TestGroupMessages(t *testing.T) {
 	simpleChatStore := &mocks.SimpleChatStore{}
 

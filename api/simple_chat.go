@@ -11,15 +11,16 @@ import (
 
 func (api *API) InitRootRoutes() {
 	api.Router.UserRouter.Handle("/login", api.ChatHandler(loginUser)).Methods("POST")
-	api.Router.GroupRouter.Handle("/{name}/join", api.AuthRequiredChatHandler(joinGroup)).Methods("POST")
 	api.Router.GroupRouter.Handle("", api.AuthRequiredChatHandler(createGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("/{name}/join", api.AuthRequiredChatHandler(joinGroup)).Methods("POST")
+	api.Router.GroupRouter.Handle("", api.AuthRequiredChatHandler(fetchUserGroups)).Methods("GET")
 	api.Router.GroupRouter.Handle("/{id}/messages", api.AuthRequiredChatHandler(sendMessageToGroup)).Methods("POST")
 	api.Router.GroupRouter.Handle("/{id}/messages", api.AuthRequiredChatHandler(groupMessages)).Methods("GET")
 }
 
 type MessageRequest struct {
-	Text              string
-	Message_sent_time string
+	Text            string
+	MessageSentTime string `json:"message_sent_time"`
 }
 
 func sendMessageToGroup(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func sendMessageToGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 	message := make(map[string]interface{})
 	response := make(map[string]interface{})
 
-	epochMillis, err := strconv.ParseInt(messageRequest.Message_sent_time, 10, 64)
+	epochMillis, err := strconv.ParseInt(messageRequest.MessageSentTime, 10, 64)
 	if err != nil {
 		response["message"] = "Bad Request for Message Sent time"
 		message["data"] = response
@@ -68,7 +69,6 @@ func sendMessageToGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 	statusCode = 200
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(message)
-
 }
 
 func loginUser(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -143,6 +143,24 @@ func joinGroup(c *Context, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
+func fetchUserGroups(c *Context, w http.ResponseWriter, r *http.Request) {
+	statusCode := 200
+	response := make(map[string]interface{})
+
+	userGroups, err := c.Store.UserGroups(c.User)
+	if err != nil {
+		statusCode = 500
+	}
+
+	response["groups"] = userGroups
+	message := make(map[string]interface{})
+	message["data"] = response
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(message)
+}
+
 func groupMessages(c *Context, w http.ResponseWriter, r *http.Request) {
 	statusCode := 200
 	id := mux.Vars(r)["id"]
@@ -168,14 +186,14 @@ func groupMessages(c *Context, w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(message)
 		return
 	}
-	
+
 	responseGroupMessages := []model.GroupMessageResponse{}
-	for i:=0; i<len(groups); i++ {
+	for i := 0; i < len(groups); i++ {
 		resMessage := model.GroupMessageResponse{}
 		resMessage.UserName = groups[i].UserName
 		resMessage.Message = groups[i].Message
 		resMessage.MessageSentAt = groups[i].MessageSentAt
-		responseGroupMessages = append(responseGroupMessages,resMessage)
+		responseGroupMessages = append(responseGroupMessages, resMessage)
 	}
 	response["messages"] = responseGroupMessages // list of messages - see how to send so that it follows contracts!
 	message["data"] = response

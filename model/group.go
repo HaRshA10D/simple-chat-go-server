@@ -6,9 +6,9 @@ import (
 )
 
 type Group struct {
-	ID             int `gorm:"primary_key;SERIAL"`
-	Name           string
-	LastActivityAt time.Time
+	ID             int       `gorm:"primary_key;SERIAL" json:"id"`
+	Name           string    `json:"name"`
+	LastActivityAt time.Time `json:"last_activity_at"`
 }
 
 func (group *Group) IsValid() bool {
